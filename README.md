@@ -87,8 +87,6 @@ D-QQ 会**立即发送**，只改变转发记录的时间，不是定时发送�
 
 可在 `data/plugin_data/astrbot_plugin_steinsgate/` 下编辑 `UniDiv.json` 和 `Timeline.json` 自定义资料，修改后即时生效，插件更新不会覆盖已有数据。
 
-## 致谢与许可
-
-移植自 [Shennoter/SteinsGateMirai](https://github.com/Shennoter/SteinsGateMirai)，沿用原项目的辉光管图片和剧情资料，实现已重写为 AstrBot 插件。
+## 许可
 
 本项目采用 [GNU AGPL v3](LICENSE) 许可。
