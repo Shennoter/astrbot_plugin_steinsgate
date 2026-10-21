@@ -5,3 +5,5 @@ version: '1.0.1'
 author: Shennoter
 repo: https://github.com/Shennoter/astrbot_plugin_steinsgate
 astrbot_version: '>=4.16,<5'
+support_platforms:
+  - aiocqhttp
