@@ -153,8 +153,25 @@ def parse_dqq(arguments: str, default_seconds: int = 432000) -> tuple[str, int]:
     return content, offset
 
 
-def dqq_timestamp(offset: int, now: int) -> tuple[int, str]:
-    target = now + offset
+def dqq_timestamp(offset: int, now: int, target_datetime: str = "") -> tuple[int, str]:
+    if target_datetime:
+        if not isinstance(target_datetime, str):
+            raise ValueError("目标日期必须是 ISO 日期字符串，如 2014-12-25")
+        try:
+            moment = datetime.fromisoformat(
+                target_datetime.strip().replace("Z", "+00:00")
+            )
+        except ValueError as exc:
+            raise ValueError(
+                "目标日期格式错误，请使用 YYYY-MM-DD 或 YYYY-MM-DD HH:MM:SS"
+            ) from exc
+        if moment.microsecond:
+            raise ValueError("目标时间仅支持整秒")
+        if moment.tzinfo is None:
+            moment = moment.replace(tzinfo=SHANGHAI)
+        target = int(moment.timestamp())
+    else:
+        target = now + offset
     # QQ forwarding implementations commonly use signed 32-bit Unix seconds.
     if not 0 <= target <= 2147483647:
         raise ValueError("目标时间须在 1970 年至 2038 年支持的时间范围内")

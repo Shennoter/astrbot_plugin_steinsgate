@@ -225,6 +225,30 @@ async def test_llm_dqq_text_fallback(plugin):
 
 
 @pytest.mark.asyncio
+async def test_llm_absolute_dqq_regression(plugin, monkeypatch):
+    from datetime import datetime
+
+    from astrbot_plugin_steinsgate.core import SHANGHAI
+
+    monkeypatch.setattr("time.time", lambda: 1792557346)
+    event = Event()
+    response = await plugin.tool_dqq(event, "忘不了的信", -123456, "2014-12-25")
+    assert "已立即发送" in response
+    node = event.bot.call_action.call_args.kwargs["messages"][0]["data"]
+    assert node["time"] == int(datetime(2014, 12, 25, tzinfo=SHANGHAI).timestamp())
+    assert node["content"] == [{"type": "text", "data": {"text": "忘不了的信"}}]
+    assert "2014-12-25" not in response
+
+
+@pytest.mark.asyncio
+async def test_llm_invalid_absolute_date_does_not_send(plugin):
+    event = Event()
+    response = await plugin.tool_dqq(event, "忘不了的信", 0, "2014-02-29")
+    assert "未发送" in response
+    event.bot.call_action.assert_not_called()
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "content,offset",
     [("", 0), ("hi", 0.5), ("hi", True), ("hi", "60"), ("hi", 999999999999)],
@@ -255,7 +279,11 @@ def test_llm_tool_parameter_docstrings(plugin):
         "tool_divergence": {"divergence": "string"},
         "tool_special": {"divergence": "string"},
         "tool_timeline": {"year": "string"},
-        "tool_dqq": {"content": "string", "offset_seconds": "number"},
+        "tool_dqq": {
+            "content": "string",
+            "offset_seconds": "number",
+            "target_datetime": "string",
+        },
     }
     for method, params in expected.items():
         func = getattr(plugin, method)

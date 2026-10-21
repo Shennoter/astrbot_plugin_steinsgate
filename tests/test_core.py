@@ -109,3 +109,38 @@ def test_time_offset():
     assert label == "2023-11-10 06:13:20 UTC+8"
     with pytest.raises(ValueError):
         dqq_timestamp(999999999999, 1700000000)
+
+
+@pytest.mark.parametrize("now", [1700000000, 1792557346, 1900000000])
+def test_absolute_date_is_independent_of_current_time(now):
+    from datetime import datetime
+
+    from astrbot_plugin_steinsgate.core import SHANGHAI
+
+    expected = int(datetime(2014, 12, 25, tzinfo=SHANGHAI).timestamp())
+    actual, label = dqq_timestamp(-999999, now, "2014-12-25")
+    assert actual == expected
+    assert label == "2014-12-25 00:00:00 UTC+8"
+
+
+@pytest.mark.parametrize(
+    "date", ["2000-02-29 12:34:56", "2014-12-25T04:34:56Z", "2014-12-25T12:34:56+08:00"]
+)
+def test_absolute_date_leap_year_and_timezone(date):
+    from datetime import datetime
+
+    from astrbot_plugin_steinsgate.core import SHANGHAI
+
+    year, month, day = (2000, 2, 29) if date.startswith("2000") else (2014, 12, 25)
+    assert dqq_timestamp(0, 1700000000, date)[0] == int(
+        datetime(year, month, day, 12, 34, 56, tzinfo=SHANGHAI).timestamp()
+    )
+
+
+@pytest.mark.parametrize(
+    "date",
+    ["2014-02-29", "2014-13-01", "2014-12-32", "yesterday", "1960-01-01", "2040-01-01"],
+)
+def test_bad_absolute_date(date):
+    with pytest.raises(ValueError):
+        dqq_timestamp(0, 1700000000, date)

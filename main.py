@@ -89,16 +89,18 @@ class SteinsGate(Star):
         except ValueError as exc:
             return event.plain_result(str(exc))
 
-    async def _send_dqq(self, event, content, offset):
+    async def _send_dqq(self, event, content, offset, target_datetime=""):
         if not isinstance(content, str) or not content.strip():
             raise ValueError("请输入 D-QQ 正文")
-        if (
+        if not target_datetime and (
             isinstance(offset, bool)
             or not isinstance(offset, (int, float))
             or not float(offset).is_integer()
         ):
             raise ValueError("时间偏移必须为整数秒")
-        target, date = dqq_timestamp(int(offset), int(time.time()))
+        target, date = dqq_timestamp(
+            0 if target_datetime else int(offset), int(time.time()), target_datetime
+        )
         if event.get_platform_name() == "aiocqhttp":
             node = {
                 "type": "node",
@@ -196,20 +198,31 @@ class SteinsGate(Star):
 
     @filter.llm_tool(name="steinsgate_send_dqq")
     async def tool_dqq(
-        self, event: AstrMessageEvent, content: str, offset_seconds: int = 432000
+        self,
+        event: AstrMessageEvent,
+        content: str,
+        offset_seconds: int = 432000,
+        target_datetime: str = "",
     ) -> str:
         """在当前会话立即发送一条带过去或未来时间的 D-QQ，模拟石头门的时空短信。
         用户要求发 D-QQ、给过去/未来的自己留言、把一句话显示成过去/未来发来的消息时使用。
         这是即时发送的娱乐功能，不是定时发送、提醒、真实时间旅行，也不能给其他会话或联系人发消息。
         用户要求五天后再发送/到时候提醒时不要调用；若正文或时间意图不清先澄清。
         使用请求者本人的昵称和 QQ 号，不冒充其他人。一次请求只调用一次；工具成功后不要再发送相同正文。
+        用户指定了年月日时，必须通过 target_datetime 原样传递日期，禁止自行计算与现在相差的秒数。
 
         Args:
             content(string): 要发送的消息正文，保留用户指定文字、空格、引号和数字；用户未指定正文时先询问。
-            offset_seconds(number): 相对当前时间的整数秒数，过去为负、未来为正。如五天前=-432000，明天=86400；用户未指定时间时默认432000秒（未来五天）。
+            offset_seconds(number): 仅用于相对时间的整数秒数，过去为负、未来为正。如五天前=-432000，明天=86400。未指定时间时为432000。设置 target_datetime 时此参数被忽略，可传0。
+            target_datetime(string): 用户指定的绝对日期或时刻，格式 YYYY-MM-DD 或 YYYY-MM-DD HH:MM:SS。例如2014年12月25日传2014-12-25，由代码计算时间戳，禁止换算为相对秒数。没有时刻时为当天00:00:00，未提供时区时使用北京时间UTC+8；支持ISO时区后缀。用户只指定相对时间时传空字符串。
         """
         try:
-            result, mode, _ = await self._send_dqq(event, content, offset_seconds)
+            result, mode, date = await self._send_dqq(
+                event, content, offset_seconds, target_datetime
+            )
+            logger.info(
+                "D-QQ resolved target=%s; absolute=%s", date, bool(target_datetime)
+            )
             if result is not None:
                 await event.send(result)
             return (
