@@ -1,0 +1,22 @@
+{
+  "unique_probability": {
+    "description": "随机世界线中出现特殊世界线的概率（0～100）",
+    "type": "int",
+    "default": 50
+  },
+  "dqq_commands": {
+    "description": "不带唤醒前缀的 D-QQ 触发词（精确匹配首词）",
+    "type": "list",
+    "default": ["dqq", "发送", "D-QQ"]
+  },
+  "enable_bare_dqq": {
+    "description": "兼容原插件：无需 / 前缀触发 D-QQ",
+    "type": "bool",
+    "default": true
+  },
+  "dqq_default_seconds": {
+    "description": "D-QQ 默认时间偏移（秒；432000 为未来五天，负数为过去）",
+    "type": "int",
+    "default": 432000
+  }
+}

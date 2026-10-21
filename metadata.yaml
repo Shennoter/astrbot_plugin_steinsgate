@@ -1,0 +1,7 @@
+name: astrbot_plugin_steinsgate
+display_name: 命运石之门 SteinsGate
+desc: 命运石之门主题插件，支持世界线辉光管图片、特殊世界线资料、年表查询与 D-QQ，可通过指令或 LLM 调用。
+version: '1.0.0'
+author: Shennoter
+repo: https://github.com/Shennoter/astrbot_plugin_steinsgate
+astrbot_version: '>=4.16,<5'
